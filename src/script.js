@@ -103,7 +103,21 @@ customContainer.appendChild(gui.domElement);
 const settings = {
   accelerationOrbit: 1,
   acceleration: 1,
-  sunIntensity: 1.9
+  sunIntensity: 1.9,
+  isPaused: false
+};
+
+// Individual planet speed settings
+const planetSpeeds = {
+  mercury: 1,
+  venus: 1,
+  earth: 1,
+  mars: 1,
+  jupiter: 1,
+  saturn: 1,
+  uranus: 1,
+  neptune: 1,
+  pluto: 1
 };
 
 gui.add(settings, 'accelerationOrbit', 0, 10).onChange(value => {
@@ -113,6 +127,19 @@ gui.add(settings, 'acceleration', 0, 10).onChange(value => {
 gui.add(settings, 'sunIntensity', 1, 10).onChange(value => {
   sunMat.emissiveIntensity = value;
 });
+
+// Create individual planet speed controls
+const planetSpeedFolder = gui.addFolder('Individual Planet Speeds');
+planetSpeedFolder.add(planetSpeeds, 'mercury', 1, 10).name('Mercury Speed');
+planetSpeedFolder.add(planetSpeeds, 'venus', 1, 10).name('Venus Speed');
+planetSpeedFolder.add(planetSpeeds, 'earth', 1, 10).name('Earth Speed');
+planetSpeedFolder.add(planetSpeeds, 'mars', 1, 10).name('Mars Speed');
+planetSpeedFolder.add(planetSpeeds, 'jupiter', 1, 10).name('Jupiter Speed');
+planetSpeedFolder.add(planetSpeeds, 'saturn', 1, 10).name('Saturn Speed');
+planetSpeedFolder.add(planetSpeeds, 'uranus', 1, 10).name('Uranus Speed');
+planetSpeedFolder.add(planetSpeeds, 'neptune', 1, 10).name('Neptune Speed');
+planetSpeedFolder.add(planetSpeeds, 'pluto', 1, 10).name('Pluto Speed');
+planetSpeedFolder.open();
 
 // mouse movement
 const raycaster = new THREE.Raycaster();
@@ -439,7 +466,7 @@ const earthMoon = [{
   size: 1.6,
   texture: earthMoonTexture,
   bump: earthMoonBump,
-  orbitSpeed: 0.001 * settings.accelerationOrbit,
+  baseOrbitSpeed: 0.001,
   orbitRadius: 10
 }]
 
@@ -449,7 +476,7 @@ const marsMoons = [
     modelPath: '/images/mars/phobos.glb',
     scale: 0.1,
     orbitRadius: 5,
-    orbitSpeed: 0.002 * settings.accelerationOrbit,
+    baseOrbitSpeed: 0.002,
     position: 100,
     mesh: null
   },
@@ -457,7 +484,7 @@ const marsMoons = [
     modelPath: '/images/mars/deimos.glb',
     scale: 0.1,
     orbitRadius: 9,
-    orbitSpeed: 0.0005 * settings.accelerationOrbit,
+    baseOrbitSpeed: 0.0005,
     position: 120,
     mesh: null
   }
@@ -469,25 +496,25 @@ const jupiterMoons = [
     size: 1.6,
     texture: ioTexture,
     orbitRadius: 20,
-    orbitSpeed: 0.0005 * settings.accelerationOrbit
+    baseOrbitSpeed: 0.0005
   },
   {
     size: 1.4,
     texture: europaTexture,
     orbitRadius: 24,
-    orbitSpeed: 0.00025 * settings.accelerationOrbit
+    baseOrbitSpeed: 0.00025
   },
   {
     size: 2,
     texture: ganymedeTexture,
     orbitRadius: 28,
-    orbitSpeed: 0.000125 * settings.accelerationOrbit
+    baseOrbitSpeed: 0.000125
   },
   {
     size: 1.7,
     texture: callistoTexture,
     orbitRadius: 32,
-    orbitSpeed: 0.00006 * settings.accelerationOrbit
+    baseOrbitSpeed: 0.00006
   }
 ];
 
@@ -660,38 +687,41 @@ pluto.planet.receiveShadow = true;
 
 function animate(){
 
-  //rotating planets around the sun and itself
-  sun.rotateY(0.001 * settings.acceleration);
-  mercury.planet.rotateY(0.001 * settings.acceleration);
-  mercury.planet3d.rotateY(0.004 * settings.accelerationOrbit);
-  venus.planet.rotateY(0.0005 * settings.acceleration)
-  venus.Atmosphere.rotateY(0.0005 * settings.acceleration);
-  venus.planet3d.rotateY(0.0006 * settings.accelerationOrbit);
-  earth.planet.rotateY(0.005 * settings.acceleration);
-  earth.Atmosphere.rotateY(0.001 * settings.acceleration);
-  earth.planet3d.rotateY(0.001 * settings.accelerationOrbit);
-  mars.planet.rotateY(0.01 * settings.acceleration);
-  mars.planet3d.rotateY(0.0007 * settings.accelerationOrbit);
-  jupiter.planet.rotateY(0.005 * settings.acceleration);
-  jupiter.planet3d.rotateY(0.0003 * settings.accelerationOrbit);
-  saturn.planet.rotateY(0.01 * settings.acceleration);
-  saturn.planet3d.rotateY(0.0002 * settings.accelerationOrbit);
-  uranus.planet.rotateY(0.005 * settings.acceleration);
-  uranus.planet3d.rotateY(0.0001 * settings.accelerationOrbit);
-  neptune.planet.rotateY(0.005 * settings.acceleration);
-  neptune.planet3d.rotateY(0.00008 * settings.accelerationOrbit);
-  pluto.planet.rotateY(0.001 * settings.acceleration)
-  pluto.planet3d.rotateY(0.00006 * settings.accelerationOrbit)
+  // Only animate if not paused
+  if (!settings.isPaused) {
+    //rotating planets around the sun and itself
+    sun.rotateY(0.001 * settings.acceleration);
+    mercury.planet.rotateY(0.001 * settings.acceleration);
+    mercury.planet3d.rotateY(0.004 * settings.accelerationOrbit * planetSpeeds.mercury);
+    venus.planet.rotateY(0.0005 * settings.acceleration)
+    venus.Atmosphere.rotateY(0.0005 * settings.acceleration);
+    venus.planet3d.rotateY(0.0006 * settings.accelerationOrbit * planetSpeeds.venus);
+    earth.planet.rotateY(0.005 * settings.acceleration);
+    earth.Atmosphere.rotateY(0.001 * settings.acceleration);
+    earth.planet3d.rotateY(0.001 * settings.accelerationOrbit * planetSpeeds.earth);
+    mars.planet.rotateY(0.01 * settings.acceleration);
+    mars.planet3d.rotateY(0.0007 * settings.accelerationOrbit * planetSpeeds.mars);
+    jupiter.planet.rotateY(0.005 * settings.acceleration);
+    jupiter.planet3d.rotateY(0.0003 * settings.accelerationOrbit * planetSpeeds.jupiter);
+    saturn.planet.rotateY(0.01 * settings.acceleration);
+    saturn.planet3d.rotateY(0.0002 * settings.accelerationOrbit * planetSpeeds.saturn);
+    uranus.planet.rotateY(0.005 * settings.acceleration);
+    uranus.planet3d.rotateY(0.0001 * settings.accelerationOrbit * planetSpeeds.uranus);
+    neptune.planet.rotateY(0.005 * settings.acceleration);
+    neptune.planet3d.rotateY(0.00008 * settings.accelerationOrbit * planetSpeeds.neptune);
+    pluto.planet.rotateY(0.001 * settings.acceleration)
+    pluto.planet3d.rotateY(0.00006 * settings.accelerationOrbit * planetSpeeds.pluto)
 
 // Animate Earth's moon
 if (earth.moons) {
   earth.moons.forEach(moon => {
     const time = performance.now();
     const tiltAngle = 5 * Math.PI / 180;
+    const currentOrbitSpeed = moon.baseOrbitSpeed * settings.accelerationOrbit * planetSpeeds.earth;
 
-    const moonX = earth.planet.position.x + moon.orbitRadius * Math.cos(time * moon.orbitSpeed);
-    const moonY = moon.orbitRadius * Math.sin(time * moon.orbitSpeed) * Math.sin(tiltAngle);
-    const moonZ = earth.planet.position.z + moon.orbitRadius * Math.sin(time * moon.orbitSpeed) * Math.cos(tiltAngle);
+    const moonX = earth.planet.position.x + moon.orbitRadius * Math.cos(time * currentOrbitSpeed);
+    const moonY = moon.orbitRadius * Math.sin(time * currentOrbitSpeed) * Math.sin(tiltAngle);
+    const moonZ = earth.planet.position.z + moon.orbitRadius * Math.sin(time * currentOrbitSpeed) * Math.cos(tiltAngle);
 
     moon.mesh.position.set(moonX, moonY, moonZ);
     moon.mesh.rotateY(0.01);
@@ -702,10 +732,11 @@ if (marsMoons){
 marsMoons.forEach(moon => {
   if (moon.mesh) {
     const time = performance.now();
+    const currentOrbitSpeed = moon.baseOrbitSpeed * settings.accelerationOrbit * planetSpeeds.mars;
 
-    const moonX = mars.planet.position.x + moon.orbitRadius * Math.cos(time * moon.orbitSpeed);
-    const moonY = moon.orbitRadius * Math.sin(time * moon.orbitSpeed);
-    const moonZ = mars.planet.position.z + moon.orbitRadius * Math.sin(time * moon.orbitSpeed);
+    const moonX = mars.planet.position.x + moon.orbitRadius * Math.cos(time * currentOrbitSpeed);
+    const moonY = moon.orbitRadius * Math.sin(time * currentOrbitSpeed);
+    const moonZ = mars.planet.position.z + moon.orbitRadius * Math.sin(time * currentOrbitSpeed);
 
     moon.mesh.position.set(moonX, moonY, moonZ);
     moon.mesh.rotateY(0.001);
@@ -717,9 +748,10 @@ marsMoons.forEach(moon => {
 if (jupiter.moons) {
   jupiter.moons.forEach(moon => {
     const time = performance.now();
-    const moonX = jupiter.planet.position.x + moon.orbitRadius * Math.cos(time * moon.orbitSpeed);
-    const moonY = moon.orbitRadius * Math.sin(time * moon.orbitSpeed);
-    const moonZ = jupiter.planet.position.z + moon.orbitRadius * Math.sin(time * moon.orbitSpeed);
+    const currentOrbitSpeed = moon.baseOrbitSpeed * settings.accelerationOrbit * planetSpeeds.jupiter;
+    const moonX = jupiter.planet.position.x + moon.orbitRadius * Math.cos(time * currentOrbitSpeed);
+    const moonY = moon.orbitRadius * Math.sin(time * currentOrbitSpeed);
+    const moonZ = jupiter.planet.position.z + moon.orbitRadius * Math.sin(time * currentOrbitSpeed);
 
     moon.mesh.position.set(moonX, moonY, moonZ);
     moon.mesh.rotateY(0.01);
@@ -732,6 +764,8 @@ asteroids.forEach(asteroid => {
   asteroid.position.x = asteroid.position.x * Math.cos(0.0001 * settings.accelerationOrbit) + asteroid.position.z * Math.sin(0.0001 * settings.accelerationOrbit);
   asteroid.position.z = asteroid.position.z * Math.cos(0.0001 * settings.accelerationOrbit) - asteroid.position.x * Math.sin(0.0001 * settings.accelerationOrbit);
 });
+
+  } // End of pause check
 
 // ****** OUTLINES ON PLANETS ******
 raycaster.setFromCamera(mouse, camera);
@@ -790,3 +824,20 @@ window.addEventListener('resize', function(){
   renderer.setSize(window.innerWidth,window.innerHeight);
   composer.setSize(window.innerWidth,window.innerHeight);
 });
+
+// ******  PAUSE/RESUME FUNCTIONALITY  ******
+function toggleAnimation() {
+  settings.isPaused = !settings.isPaused;
+  updatePauseButton();
+}
+
+function updatePauseButton() {
+  const pauseBtn = document.getElementById('pause-button');
+  if (pauseBtn) {
+    pauseBtn.textContent = settings.isPaused ? '▶️ Resume' : '⏸️ Pause';
+    pauseBtn.title = settings.isPaused ? 'Resume Animation' : 'Pause Animation';
+  }
+}
+
+// Make function global for button access
+window.toggleAnimation = toggleAnimation;
